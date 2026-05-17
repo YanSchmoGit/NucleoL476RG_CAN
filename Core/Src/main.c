@@ -33,7 +33,7 @@ int32_t valueTemp;
 int main(void)
 {
 
-  // Merge
+
 
   // GPIO blink init
 
