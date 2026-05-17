@@ -26,40 +26,47 @@ int8_t CanInit()
 
     // Enter CAN initialization modus - necessary to change CAN settings
     CAN1->MCR |= CAN_MCR_INRQ;
-    while (! (CAN1->MSR & CAN_MSR_INAK));
+    while (!(CAN1->MSR & CAN_MSR_INAK))
+    {
+    }
     CAN1->MCR &= ~CAN_MCR_SLEEP;
 
     // Set Baudrate - 500 kbit/s at 16 MHz MCU system clock
     // Baudrate = (F_Sys / (Prescaler * (1 + TS1 + TS2)))
 
-    CAN1->BTR = (1 << CAN_BTR_BRP_Pos)  // Prescaler (value 2)
-                | (9 << CAN_BTR_TS1_Pos) // TS1 (value 13)
-                | (4 << CAN_BTR_TS2_Pos) // TS2 (value 2)
-                | (0 << CAN_BTR_SJW_Pos); // Resynchronization jump width (value 1)
-
-
-
-    // Set filter
-
-    CAN1->FMR |= CAN_FMR_FINIT;     // Filter init mode
-    CAN1->FA1R &= ~CAN_FA1R_FACT0;   // Disable filter 0
-    CAN1->FS1R |= CAN_FS1R_FSC0;    // Enable 32 bit mode
-    CAN1->FM1R &= ~CAN_FM1R_FBM0;   // Enable identifier mask mode
-
-    CAN1-> sFilterRegister[0].FR1 = 0; // Filter id 0 (accept all)
-    CAN1-> sFilterRegister[0].FR2 = 0; // Filter mask 0 (accept all)
-
-    CAN1->FFA1R &= ~CAN_FFA1R_FFA0; // Filter 0 at fifo 0
-
-    CAN1->FA1R |= CAN_FA1R_FACT0; // Enable filter 0
-    CAN1->FMR &= ~CAN_FMR_FINIT; // Disable init mode
+    CAN1->BTR = (1 << CAN_BTR_BRP_Pos) // Prescaler (value 2)
+        | (9 << CAN_BTR_TS1_Pos) // TS1 (value 13)
+        | (4 << CAN_BTR_TS2_Pos) // TS2 (value 2)
+        | (0 << CAN_BTR_SJW_Pos); // Resynchronization jump width (value 1)
 
     // Switch CAN mode - Normal mode
 
-    CAN1->MCR &= ~CAN_MCR_INRQ;         // Normal mode
-    while (CAN1->MSR & CAN_MSR_INAK);   // Wait for mode switch
+    CAN1->MCR &= ~CAN_MCR_INRQ; // Normal mode
+    while (CAN1->MSR & CAN_MSR_INAK)
+    {
+    } // Wait for mode switch
 
-return 1;
+
+    return 1;
+}
+
+int8_t CanFilter(uint16_t id, uint16_t mask)
+{
+    // Configure filter
+
+    CAN1->FMR |= CAN_FMR_FINIT; // Init mode for all filter
+    CAN1->FA1R &= ~CAN_FA1R_FACT0; // Deactivate filter 0
+    CAN1->FS1R |= CAN_FS1R_FSC0; // Enable 32-bit scale mode
+    CAN1->FM1R &= ~CAN_FM1R_FBM0; // Identifier mask mode
+
+    CAN1->sFilterRegister[0].FR1 = id << 21; // Filter id  - shift 21 bytes --> Standard ID is used (Bits 21:31)
+    CAN1->sFilterRegister[0].FR2 = mask << 21; // Filter mask - shift 21 bytes --> Standard ID is used (Bits 21:31)
+
+    CAN1->FFA1R &= ~(CAN_FFA1R_FFA0); // Assign filter 0 to FIFO 0
+    CAN1->FA1R |= CAN_FA1R_FACT0;
+    CAN1->FMR &= ~CAN_FMR_FINIT;
+
+    return 1;
 }
 
 // Send function
@@ -95,7 +102,6 @@ int8_t CanReceive(CANMessage* msg)
     if ((CAN1->RF0R & CAN_RF0R_FMP0) == 0)
     {
         return 0; // No message received
-
     }
 
     // Extract ID from data
@@ -106,7 +112,7 @@ int8_t CanReceive(CANMessage* msg)
 
     // Get data from data registers
 
-    uint32_t lowReg  = CAN1->sFIFOMailBox[0].RDLR;
+    uint32_t lowReg = CAN1->sFIFOMailBox[0].RDLR;
     uint32_t highReg = CAN1->sFIFOMailBox[0].RDHR;
 
     // Divide data to output structure
@@ -118,5 +124,6 @@ int8_t CanReceive(CANMessage* msg)
     CAN1->RF0R |= CAN_RF0R_RFOM0;
 
     return 1; // Message received
-
 }
+
+

@@ -85,7 +85,7 @@ BMP280_U32_t bmp280_compensate_P_int64(BMP280_S32_t adc_P)
 
 int8_t GetSensorValues(uint8_t devAdr, uint32_t* valuePress, int32_t* valueTemp)
 {
-    static uint8_t tempData[5];
+    static uint8_t tempData[6];
 
     static uint32_t tempValuePress;
     static int32_t tempValueTemp;
