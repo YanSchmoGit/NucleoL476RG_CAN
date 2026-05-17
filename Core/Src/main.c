@@ -33,6 +33,8 @@ int32_t valueTemp;
 int main(void)
 {
 
+  // Merge
+
   // GPIO blink init
 
   RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
