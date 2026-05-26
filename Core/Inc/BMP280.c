@@ -26,7 +26,7 @@ int8_t GetSensorCalibrationData(uint8_t devAdr)
 
     // Get data from sensor
 
-    ReadI2C(devAdr, BMP280_REGISTER_CALIB_00, 24, tempData);
+    ReadI2C(devAdr, BMP280_REGISTER_CALIB_00, 20, tempData);
 
     BMP280CalibData.dig_T1 = (int16_t)(((uint16_t)tempData[1] << 8) | tempData[0]);
     BMP280CalibData.dig_T2 = (((uint16_t)tempData[3] << 8) | tempData[2]);
