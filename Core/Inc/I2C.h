@@ -24,11 +24,12 @@ typedef enum
 
 typedef struct
 {
-    uint8_t *data;
+    uint8_t* data;
     volatile uint8_t index;
     uint8_t numberOfBytes;
     uint8_t regAdr;
     uint8_t devAdr;
+    uint8_t dataReady;
 } I2C_data;
 
 // ##### Define variables #####
@@ -41,9 +42,9 @@ extern volatile I2C_data I2CData;
 
 void InitI2C(GPIO_TypeDef* GPIOxSCL, uint8_t pinSCL, GPIO_TypeDef* GPIOxSDA, uint8_t pinSDA);
 
-int8_t ReadI2C(uint8_t devAdr, uint8_t regAdr, uint8_t numberOfBytes, uint8_t *data);
+int8_t ReadI2C(uint8_t devAdr, uint8_t regAdr, uint8_t numberOfBytes, uint8_t* data);
 
-int8_t WriteI2C(uint8_t devAdr, uint8_t regAdr, uint8_t numberOfBytes, uint8_t *data);
+int8_t WriteI2C(uint8_t devAdr, uint8_t regAdr, uint8_t numberOfBytes, uint8_t* data);
 
 
 // Interrupt Handler

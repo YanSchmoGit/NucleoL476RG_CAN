@@ -182,7 +182,6 @@ void LCDSetCursorLocation(uint8_t posX, uint8_t posY)
 
 void LCDSetup()
 {
-
     // Port expander
 
     InitPortExpander(PORTEXPANDER_DEVICE_ADR);

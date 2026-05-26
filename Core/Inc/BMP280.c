@@ -11,7 +11,11 @@ int8_t InitBMP280(uint8_t devAdr)
 {
     // Send init data to BMP280
 
-    WriteI2C(devAdr, BMP280_REGISTER_CTRL_MEAS, 2, BMP280_INIT_DATA);
+    WriteI2C(devAdr, BMP280_REGISTER_CTRL_MEAS, 2, (uint8_t*)BMP280_INIT_DATA);
+
+    while (I2CState != I2C_IDLE)
+    {
+    }
 
     // Get calibration data
 
@@ -26,7 +30,11 @@ int8_t GetSensorCalibrationData(uint8_t devAdr)
 
     // Get data from sensor
 
-    ReadI2C(devAdr, BMP280_REGISTER_CALIB_00, 24, tempData);
+    ReadI2C(devAdr, BMP280_REGISTER_CALIB_00, 20, tempData);
+
+    while (I2CState != I2C_DATA_READY)
+    {
+    }
 
     BMP280CalibData.dig_T1 = (int16_t)(((uint16_t)tempData[1] << 8) | tempData[0]);
     BMP280CalibData.dig_T2 = (((uint16_t)tempData[3] << 8) | tempData[2]);
@@ -41,6 +49,8 @@ int8_t GetSensorCalibrationData(uint8_t devAdr)
     BMP280CalibData.dig_P7 = (((uint16_t)tempData[19] << 8) | tempData[18]);
     BMP280CalibData.dig_P8 = (((uint16_t)tempData[21] << 8) | tempData[20]);
     BMP280CalibData.dig_P9 = (((uint16_t)tempData[23] << 8) | tempData[22]);
+
+    I2CState = I2C_IDLE;
 
     return 0;
 }
@@ -92,10 +102,15 @@ int8_t GetSensorValues(uint8_t devAdr, uint32_t* valuePress, int32_t* valueTemp)
 
     ReadI2C(devAdr, BMP280_REGISTER_PRESS_MSB, 6, tempData);
 
+    while (I2CState != I2C_DATA_READY)
+    {
+    }
+
     // Merge data to raw data variables
     tempValuePress = (uint32_t)((tempData[0] << 12) | (tempData[1] << 4) | (tempData[2] >> 4));
     tempValueTemp = (int32_t)((tempData[3] << 12) | (tempData[4] << 4) | (tempData[5] >> 4));
 
+    I2CState = I2C_IDLE;
 
     *valueTemp = bmp280_compensate_T_int32(tempValueTemp);
     *valuePress = (bmp280_compensate_P_int64(tempValuePress) / 256);
