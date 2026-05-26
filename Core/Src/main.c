@@ -33,7 +33,7 @@ int32_t valueTemp;
 int main(void)
 {
 
-
+// TEST
 
   // GPIO blink init
 
@@ -61,6 +61,7 @@ int main(void)
 
   while (1)
   {
+    for (int i = 0; i < 100000 ; i++);
     // BMP280 section
     GetSensorValues(BMP280_DEVICE_ADR, &valuePress, &valueTemp);
 
@@ -70,6 +71,7 @@ int main(void)
     {
       GPIOA->BSRR |= GPIO_BSRR_BS5;
     }
+
 
   }
 }
