@@ -29,50 +29,44 @@ uint32_t valuePress;
 int32_t valueTemp;
 
 
-
 int main(void)
 {
+    // TEST
 
-// TEST
+    // GPIO blink init
 
-  // GPIO blink init
-
-  RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
-  GPIOA->MODER &= ~GPIO_MODER_MODE5_Msk;
-  GPIOA->MODER |= GPIO_MODER_MODE5_0;
-
-
-  // Init functions;
-  // Init SysClock
-
-  InitClock();
+    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
+    GPIOA->MODER &= ~GPIO_MODER_MODE5_Msk;
+    GPIOA->MODER |= GPIO_MODER_MODE5_0;
 
 
-  // Init I2C
-  InitI2C(I2C_SCL_Port, I2C_SCL_Pin, I2C_SDA_Port, I2C_SDA_Pin);
+    // Init functions;
+    // Init SysClock
 
-  // Init BMP280;
-  InitBMP280(BMP280_DEVICE_ADR);
-  GetSensorCalibrationData(BMP280_DEVICE_ADR);
+    InitClock();
 
 
-  // Init Can Bus
-  CanInit();
+    // Init I2C
+    InitI2C(I2C_SCL_Port, I2C_SCL_Pin, I2C_SDA_Port, I2C_SDA_Pin);
 
-  while (1)
-  {
-    for (int i = 0; i < 100000 ; i++);
-    // BMP280 section
-    GetSensorValues(BMP280_DEVICE_ADR, &valuePress, &valueTemp);
+    // Init BMP280;
+    InitBMP280(BMP280_DEVICE_ADR);
 
-    GPIOA->BSRR |= GPIO_BSRR_BR5;
 
-    if (CanSend(CAN_SEND_ADR, valueTemp, valuePress,CAN_SEND_LEN) == 1)
+    // Init Can Bus
+    CanInit();
+
+    while (1)
     {
-      GPIOA->BSRR |= GPIO_BSRR_BS5;
+        // BMP280 section
+
+        GetSensorValues(BMP280_DEVICE_ADR, &valuePress, &valueTemp);
+
+        GPIOA->BSRR |= GPIO_BSRR_BR5;
+
+        if (CanSend(CAN_SEND_ADR, valueTemp, valuePress,CAN_SEND_LEN) == 1)
+        {
+            GPIOA->BSRR |= GPIO_BSRR_BS5;
+        }
     }
-
-
-  }
 }
-

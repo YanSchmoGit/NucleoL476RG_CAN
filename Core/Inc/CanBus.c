@@ -125,5 +125,3 @@ int8_t CanReceive(CANMessage* msg)
 
     return 1; // Message received
 }
-
-

@@ -54,8 +54,6 @@ void InitI2C(GPIO_TypeDef* GPIOxSCL, uint8_t pinSCL, GPIO_TypeDef* GPIOxSDA, uin
     GPIOxSDA->PUPDR &= ~(0x3UL << (pinSDA * 2));
 
 
-
-
     GPIOxSCL->OTYPER |= (0x1UL << pinSCL);
     GPIOxSDA->OTYPER |= (0x1UL << pinSDA);
 
@@ -126,7 +124,7 @@ int8_t ReadI2C(uint8_t devAdr, uint8_t regAdr, uint8_t numberOfBytes, uint8_t* d
     I2CData.regAdr = regAdr;
     I2CData.numberOfBytes = numberOfBytes;
     I2CData.data = data; // Pointer to data
-    I2CData.index= 0;
+    I2CData.index = 0;
 
     // Set state
     I2CState = I2C_WRITE_REGISTER_DATA;
@@ -143,7 +141,7 @@ int8_t ReadI2C(uint8_t devAdr, uint8_t regAdr, uint8_t numberOfBytes, uint8_t* d
 
 int8_t WriteI2C(uint8_t devAdr, uint8_t regAdr, uint8_t numberOfBytes, uint8_t* data)
 {
-   while (I2CState != I2C_IDLE)
+    while (I2CState != I2C_IDLE)
     {
     }
 
@@ -167,26 +165,26 @@ int8_t WriteI2C(uint8_t devAdr, uint8_t regAdr, uint8_t numberOfBytes, uint8_t* 
 }
 
 void I2C1_EV_IRQHandler(void)
+
+
 {
     // Buffer empty send register address
     if (I2C1->ISR & I2C_ISR_TXIS)
     {
-
         if (I2CState == I2C_WRITE_REGISTER_DATA)
         {
             uint8_t current_nbytes = (uint8_t)((I2C1->CR2 & I2C_CR2_NBYTES_Msk) >> I2C_CR2_NBYTES_Pos);
 
-            if (current_nbytes > 1)
+            if (current_nbytes > 1 && (I2C1->CR2 & I2C_CR2_AUTOEND))
             {
                 // Set state
                 I2CState = I2C_WRITE_DATA;
             }
-
             I2C1->TXDR = I2CData.regAdr;
         }
         else if (I2CState == I2C_WRITE_DATA)
         {
-            I2C1->TXDR = *I2CData.data;
+            I2C1->TXDR = (uint32_t)*I2CData.data;
         }
     }
 
@@ -215,40 +213,39 @@ void I2C1_EV_IRQHandler(void)
     // Receive data
     if (I2C1->ISR & I2C_ISR_RXNE)
     {
-        *I2CData.data = I2C1->RXDR;
-        I2CData.data++;
+        I2CData.data[I2CData.index] = (uint8_t)I2C1->RXDR;
         I2CData.index++;
-/*
-        if (I2CData.index >= I2CData.numberOfBytes)
-        {
-            I2C1->CR1 &= ~I2C_CR1_RXIE;
-        }*/
     }
 
 
     // Transfer finished
 
+    // Check for STOP Flag
     if (I2C1->ISR & I2C_ISR_STOPF)
     {
         I2C1->ICR = I2C_ICR_STOPCF; // Reset stop flag
 
         if (I2CState == I2C_READ_DATA)
         {
-            // Set status
-            I2CState = I2C_DATA_READY;
+            I2CData.dataReady = 1;
         }
-        else
-        {
-            I2CState = I2C_IDLE;
-        }
+
+        I2CState = I2C_IDLE;
+    }
+
+    // Check for NACK Flag
+    if (I2C1->ISR & I2C_ISR_NACKF)
+    {
+        I2C1->ICR = I2C_ICR_NACKCF; // Delete Flag
+        I2C1->CR2 |= I2C_CR2_STOP; // Stop communication
+        I2CState = I2C_IDLE; // Set state to IDLE
     }
 }
 
 
 void I2C1_ER_IRQHandler(void)
 {
-    uint32_t errorStatus;
-    errorStatus = I2C1->ISR;
+    uint32_t errorStatus = I2C1->ISR;
 
     if (I2C1->ISR & I2C_ISR_NACKF)
     {
@@ -257,8 +254,7 @@ void I2C1_ER_IRQHandler(void)
 
     if (I2C1->ISR & I2C_ISR_ARLO)
     {
-        I2C1->ICR = I2C_ICR_ARLOCF;
-        ;
+        I2C1->ICR = I2C_ICR_ARLOCF;;
     }
     I2C1->CR2 |= I2C_CR2_STOP; // Stop Communication
     I2CState = I2C_IDLE;
