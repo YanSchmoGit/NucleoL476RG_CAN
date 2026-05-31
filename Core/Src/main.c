@@ -1,8 +1,9 @@
 /*
-* Test project for I2C functions
+* Project CAN Communication - Nucleo L476RG
  * Used Hardware:
  * STM32L476RG
  * Bosch BMP280
+ * VP230 CAN Transceiver
  *
  */
 
